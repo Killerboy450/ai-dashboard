@@ -1,0 +1,21 @@
+Date,Platform,Campaign,Clicks,Impressions,Cost,Conversions
+2024-01-01,Facebook,Campaign A,120,5000,200,10
+2024-01-02,Google,Campaign B,150,6000,300,15
+2024-01-03,Instagram,Campaign C,100,4000,150,8
+2024-01-04,Facebook,Campaign A,180,7000,250,20
+2024-01-05,Google,Campaign B,130,5500,280,12
+2024-01-06,Instagram,Campaign C,90,3500,120,7
+2024-01-07,Facebook,Campaign A,200,8000,300,25
+2024-01-08,Google,Campaign B,170,6500,320,18
+2024-01-09,Instagram,Campaign C,110,4200,160,9
+2024-01-10,Facebook,Campaign A,210,8200,310,27
+2024-01-11,Google,Campaign B,160,6200,290,16
+2024-01-12,Instagram,Campaign C,95,3700,140,8
+2024-01-13,Facebook,Campaign A,220,8500,330,30
+2024-01-14,Google,Campaign B,180,7000,350,20
+2024-01-15,Instagram,Campaign C,105,4100,150,10
+2024-01-16,Facebook,Campaign A,230,8800,340,32
+2024-01-17,Google,Campaign B,175,6800,330,19
+2024-01-18,Instagram,Campaign C,115,4300,170,11
+2024-01-19,Facebook,Campaign A,240,9000,360,35
+2024-01-20,Google,Campaign B,190,7200,370,22
