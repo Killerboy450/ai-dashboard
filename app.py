@@ -3,6 +3,9 @@ import pandas as pd
 import sqlite3
 import hashlib
 
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(page_title="InsightAI Dashboard", layout="wide")
+
 # ------------------ DATABASE ------------------
 conn = sqlite3.connect("users.db", check_same_thread=False)
 c = conn.cursor()
@@ -31,113 +34,120 @@ def login_user(username, password):
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
-# ------------------ LOGIN UI ------------------
+# ------------------ LOGIN / SIGNUP ------------------
 menu = ["Login", "Signup"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-if choice == "Signup":
-    st.subheader("Create Account")
-    new_user = st.text_input("Username")
-    new_pass = st.text_input("Password", type='password')
-
-    if st.button("Signup"):
-        add_user(new_user, new_pass)
-        st.success("Account created! Go to login")
-
-elif choice == "Login":
-    st.subheader("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type='password')
-
-    if st.button("Login"):
-        user = login_user(username, password)
-        if user:
-            st.session_state["logged_in"] = True
-            st.success(f"Welcome {username} 🎉")
-        else:
-            st.error("Invalid credentials")
-
-# ------------------ PROTECT APP ------------------
 if not st.session_state["logged_in"]:
-    st.stop()
-st.set_page_config(page_title="InsightAI Dashboard", layout="wide")
 
-# Header
-st.markdown("## 🚀 InsightAI Dashboard")
-st.caption("Upload your data and get instant insights")
+    if choice == "Signup":
+        st.subheader("Create Account")
+        new_user = st.text_input("Username")
+        new_pass = st.text_input("Password", type='password')
 
-# Upload
-file = st.file_uploader("📂 Upload CSV or Excel", type=["csv", "xlsx"])
+        if st.button("Signup"):
+            add_user(new_user, new_pass)
+            st.success("Account created! Go to login")
 
-if file:
-    try:
-        # Read file
-        if file.name.endswith(".csv"):
-            df = pd.read_csv(file)
-        else:
-            df = pd.read_excel(file)
+    elif choice == "Login":
+        st.subheader("Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type='password')
 
-        st.success("File uploaded successfully ✅")
+        if st.button("Login"):
+            user = login_user(username, password)
+            if user:
+                st.session_state["logged_in"] = True
+                st.success(f"Welcome {username} 🎉")
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
 
-        # Clean column names
-        df.columns = df.columns.str.strip()
+# ------------------ DASHBOARD ------------------
+if st.session_state["logged_in"]:
 
-        # Detect columns
-        num_cols = df.select_dtypes(include=['number']).columns.tolist()
-        cat_cols = df.select_dtypes(exclude=['number']).columns.tolist()
+    st.sidebar.success("Logged in ✅")
 
-        if not num_cols:
-            st.error("No numeric columns found ❌")
-            st.stop()
+    if st.sidebar.button("Logout"):
+        st.session_state["logged_in"] = False
+        st.rerun()
 
-        # Sidebar
-        st.sidebar.header("⚙️ Controls")
+    # Header
+    st.markdown("## 🚀 InsightAI Dashboard")
+    st.caption("Upload your data and get instant insights")
 
-        category = st.sidebar.selectbox("Category", cat_cols if cat_cols else df.columns)
-        value = st.sidebar.selectbox("Value", num_cols)
+    # Upload
+    file = st.file_uploader("📂 Upload CSV or Excel", type=["csv", "xlsx"])
 
-        chart_type = st.sidebar.selectbox("Chart", ["Bar", "Line", "Area"])
+    if file:
+        try:
+            # Read file
+            if file.name.endswith(".csv"):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
 
-        # Filter
-        if category in df.columns:
-            options = df[category].dropna().unique()
-            selected = st.sidebar.multiselect("Filter", options, default=options)
-            df = df[df[category].isin(selected)]
+            st.success("File uploaded successfully ✅")
 
-        # KPIs
-        total = df[value].sum()
-        avg = df[value].mean()
-        max_val = df[value].max()
+            # Clean column names
+            df.columns = df.columns.str.strip()
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total", round(total, 2))
-        col2.metric("Average", round(avg, 2))
-        col3.metric("Max Value", round(max_val, 2))
+            # Detect columns
+            num_cols = df.select_dtypes(include=['number']).columns.tolist()
+            cat_cols = df.select_dtypes(exclude=['number']).columns.tolist()
 
-        # Group data
-        grouped = df.groupby(category)[value].sum().sort_values(ascending=False)
+            if not num_cols:
+                st.error("No numeric columns found ❌")
+                st.stop()
 
-        # Charts
-        st.subheader("📊 Visualization")
+            # Sidebar controls
+            st.sidebar.header("⚙️ Controls")
 
-        if chart_type == "Bar":
-            st.bar_chart(grouped)
-        elif chart_type == "Line":
-            st.line_chart(grouped)
-        else:
-            st.area_chart(grouped)
+            category = st.sidebar.selectbox("Category", cat_cols if cat_cols else df.columns)
+            value = st.sidebar.selectbox("Value", num_cols)
 
-        # Data
-        st.subheader("📄 Data Table")
-        st.dataframe(df)
+            chart_type = st.sidebar.selectbox("Chart", ["Bar", "Line", "Area"])
 
-        # Smart Insights
-        st.subheader("🧠 AI Insights")
+            # Filter
+            if category in df.columns:
+                options = df[category].dropna().unique()
+                selected = st.sidebar.multiselect("Filter", options, default=options)
+                df = df[df[category].isin(selected)]
 
-        top = grouped.idxmax()
-        bottom = grouped.idxmin()
+            # KPIs
+            total = df[value].sum()
+            avg = df[value].mean()
+            max_val = df[value].max()
 
-        insights = f"""
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total", round(total, 2))
+            col2.metric("Average", round(avg, 2))
+            col3.metric("Max Value", round(max_val, 2))
+
+            # Group data
+            grouped = df.groupby(category)[value].sum().sort_values(ascending=False)
+
+            # Charts
+            st.subheader("📊 Visualization")
+
+            if chart_type == "Bar":
+                st.bar_chart(grouped)
+            elif chart_type == "Line":
+                st.line_chart(grouped)
+            else:
+                st.area_chart(grouped)
+
+            # Data table
+            st.subheader("📄 Data Table")
+            st.dataframe(df)
+
+            # Insights
+            st.subheader("🧠 AI Insights")
+
+            top = grouped.idxmax()
+            bottom = grouped.idxmin()
+
+            insights = f"""
 📌 Top Category: {top}  
 📉 Lowest Category: {bottom}  
 
@@ -150,27 +160,30 @@ if file:
 - Optimize allocation based on trends
 """
 
-        st.success(insights)
+            st.success(insights)
 
-        # Download
-        st.subheader("📥 Export")
+            # Download
+            st.subheader("📥 Export")
 
-        st.download_button(
-            "Download Clean Data",
-            df.to_csv(index=False),
-            "clean_data.csv",
-            "text/csv"
-        )
+            st.download_button(
+                "Download Clean Data",
+                df.to_csv(index=False),
+                "clean_data.csv",
+                "text/csv"
+            )
 
-        st.download_button(
-            "Download Insights Report",
-            insights,
-            "report.txt",
-            "text/plain"
-        )
+            st.download_button(
+                "Download Insights Report",
+                insights,
+                "report.txt",
+                "text/plain"
+            )
 
-    except Exception as e:
-        st.error(f"Error: {e}")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+    else:
+        st.info("Upload a dataset to begin 🚀")
 
 else:
-    st.info("Upload a dataset to begin 🚀")
+    st.stop()
