@@ -1,6 +1,15 @@
 import streamlit as st
 import pandas as pd
 
+
+# Simple password protection
+PASSWORD = "yoursecret123"
+
+password = st.text_input("Enter Password", type="password")
+
+if password != PASSWORD:
+    st.warning("Enter correct password to access dashboard 🔒")
+    st.stop()
 st.set_page_config(page_title="InsightAI Dashboard", layout="wide")
 
 # Header
