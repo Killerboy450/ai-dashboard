@@ -3,7 +3,7 @@ import pandas as pd
 
 
 # Simple password protection
-PASSWORD = "yoursecret123"
+PASSWORD = "H@_12"
 
 password = st.text_input("Enter Password", type="password")
 
