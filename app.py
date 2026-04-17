@@ -1,14 +1,64 @@
 import streamlit as st
 import pandas as pd
+import sqlite3
+import hashlib
 
+# ------------------ DATABASE ------------------
+conn = sqlite3.connect("users.db", check_same_thread=False)
+c = conn.cursor()
 
-# Simple password protection
-PASSWORD = "H@_12"
+c.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    username TEXT,
+    password TEXT
+)
+""")
+conn.commit()
 
-password = st.text_input("Enter Password", type="password")
+# ------------------ FUNCTIONS ------------------
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
-if password != PASSWORD:
-    st.warning("Enter correct password to access dashboard 🔒")
+def add_user(username, password):
+    c.execute("INSERT INTO users VALUES (?, ?)", (username, hash_password(password)))
+    conn.commit()
+
+def login_user(username, password):
+    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, hash_password(password)))
+    return c.fetchone()
+
+# ------------------ SESSION ------------------
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+# ------------------ LOGIN UI ------------------
+menu = ["Login", "Signup"]
+choice = st.sidebar.selectbox("Menu", menu)
+
+if choice == "Signup":
+    st.subheader("Create Account")
+    new_user = st.text_input("Username")
+    new_pass = st.text_input("Password", type='password')
+
+    if st.button("Signup"):
+        add_user(new_user, new_pass)
+        st.success("Account created! Go to login")
+
+elif choice == "Login":
+    st.subheader("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type='password')
+
+    if st.button("Login"):
+        user = login_user(username, password)
+        if user:
+            st.session_state["logged_in"] = True
+            st.success(f"Welcome {username} 🎉")
+        else:
+            st.error("Invalid credentials")
+
+# ------------------ PROTECT APP ------------------
+if not st.session_state["logged_in"]:
     st.stop()
 st.set_page_config(page_title="InsightAI Dashboard", layout="wide")
 
